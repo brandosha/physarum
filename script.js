@@ -11,7 +11,7 @@ const ui = {
   },
   particles: {
     randomness: 1,
-    sensorDistance: 55,
+    sensorDistance: 50,
     moveSpeed: 0.001
   },
   diffuse: {
@@ -20,7 +20,10 @@ const ui = {
   angles: {
     turnAngle: 45,
     sensorAngle: 45
-  }
+  },
+
+  /** @type { Record<string, UISlider> } */
+  sliders: null
 }
 function uiSetup() {
   function glProxy(obj, prog) {
@@ -35,6 +38,8 @@ function uiSetup() {
         } else {
           gl.uniform1f(prog.uniforms[key], target[key])
         }
+
+        return true
       }
     })
 
@@ -72,10 +77,11 @@ function uiSetup() {
           sin(-radians), cos(-radians)
         ])
       }
+
+      return true
     }
   })
   Object.keys(ui.angles).forEach(key => ui.angles[key] = ui.angles[key])
-  
 
   cells.canvas.addEventListener("mousemove", event => {
     if (!ui.trail.followMouse) { return }
@@ -94,43 +100,14 @@ function uiSetup() {
     ui.trail.followMouse = event.target.checked
   })
 
-  uiSlider("randomness", ui.particles)
-  uiSlider("sensorDistance", ui.particles)
-  uiSlider("moveSpeed", ui.particles)
-  uiSlider("decayRate", ui.diffuse)
-
-  function uiSlider(name, obj, transform) {
-    const el = document.getElementById(name)
-
-    el.addEventListener("input", event => {
-      let val = parseFloat(el.value)
-      if (transform) { val = transform(val) }
-
-      obj[name] = val
-      updateDisplay()
-    })
-
-    const displayEl = el.parentElement.querySelector(".range-display")
-    function updateDisplay() {
-      if (displayEl) {
-        const val = obj[name]
-        let valStr = val
-        if (val % 1 !== 0) {
-          const leadingZeroes = Math.ceil(-Math.min(Math.log10(Math.abs(val % 1)), 0))
-          valStr = val.toFixed(leadingZeroes + 1)
-        }
-
-        displayEl.innerHTML = `(${valStr})`
-      }
-    }
-
-    updateDisplay()
+  ui.sliders = {
+    randomness: new UISlider("randomness", ui.particles),
+    sensorDistance: new UISlider("sensorDistance", ui.particles),
+    moveSpeed: new UISlider("moveSpeed", ui.particles),
+    decayRate: new UISlider("decayRate", ui.diffuse),
+    sensorAngle: new UISlider("sensorAngle", ui.angles),
+    turnAngle: new UISlider("turnAngle", ui.angles)
   }
-
-  
-
-  uiSlider("sensorAngle", ui.angles)
-  uiSlider("turnAngle", ui.angles)
 
   const downloadEl = document.getElementById("download")
   document.getElementById("screenshot").addEventListener("click", event => {
@@ -140,6 +117,128 @@ function uiSetup() {
       downloadEl.download = "physarum.jpg"
       downloadEl.click()
     }, "image/jpeg")
+  })
+
+  if (location.hash) {
+    const hash = location.hash
+    location.hash = ""
+
+    try {
+      const json = decodeURIComponent(hash.slice(1))
+      const parameters = JSON.parse(json)
+      importParameters(parameters)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+}
+
+class UISlider {
+  constructor(name, obj, transform) {
+    const el = document.getElementById(name)
+
+    el.addEventListener("input", event => {
+      let val = parseFloat(el.value)
+      if (transform) { val = transform(val)} 
+
+      obj[name] = val
+      this.update(true)
+    })
+
+    this.name = name
+    this.obj = obj
+    this.el = el
+
+    this.update()
+  }
+
+  update(fromInput = false) {
+    const { name, obj, el } = this
+
+    const displayEl = el.parentElement.querySelector(".range-display")
+
+    if (displayEl) {
+      const val = obj[name]
+      let valStr = val
+      if (val % 1 !== 0) {
+        const leadingZeroes = Math.ceil(-Math.min(Math.log10(Math.abs(val % 1)), 0))
+        valStr = val.toFixed(leadingZeroes + 1)
+      }
+
+      displayEl.innerHTML = `(${valStr})`
+    }
+
+    if (!fromInput) {
+      el.value = obj[name]
+    }
+  }
+}
+
+function randomizeParameters() {
+  ui.particles.sensorDistance = Math.floor(Math.random() * 200) + 10
+  ui.angles.sensorAngle = Math.floor(Math.random() * 85) + 5
+  ui.angles.turnAngle = Math.floor(Math.random() * 85) + 5
+
+  if (ui.sliders) {
+    ui.sliders.sensorDistance.update()
+    ui.sliders.sensorAngle.update()
+    ui.sliders.turnAngle.update()
+  }
+}
+randomizeParameters()
+document.getElementById("randomize").addEventListener("click", randomizeParameters)
+
+function exportParameters() {
+  const parameters = {}
+
+  Object.keys(ui).forEach(key => {
+    if (key == "sliders") { return }
+
+    const params = ui[key]
+    Object.keys(params).forEach(key => {
+      parameters[key] = params[key]
+    })
+  })
+
+  return parameters
+}
+document.getElementById("copy-parameters").addEventListener("click", event => {
+  const el = document.getElementById("copy-url")
+
+  const url = location.protocol + "//" + location.host + location.pathname
+  const paramString = encodeURIComponent(JSON.stringify(exportParameters()))
+
+  el.value = url + "#" + paramString
+  console.log(el.value)
+  
+  el.select()
+  document.execCommand("copy")
+})
+
+let paramObjects
+function importParameters(parameters) {
+  if (!paramObjects) {
+    paramObjects = {}
+
+    Object.keys(ui).forEach(key => {
+      if (key == "sliders") { return }
+
+      const params = ui[key]
+      Object.keys(params).forEach(key => {
+        paramObjects[key] = params
+      })
+    })
+  }
+
+  Object.keys(parameters).forEach(key => {
+    const params = paramObjects[key]
+    if (params) {
+      params[key] = parameters[key]
+    }
+  })
+
+  Object.keys(ui.sliders).forEach(key => {
+    ui.sliders[key].update()
   })
 }
 

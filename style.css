@@ -20,6 +20,7 @@ canvas {
   background-color: #333;
   padding: 1.25em 2em;
   flex-grow: 1;
+  overflow: auto;
 }
 
 .controls > * {
@@ -35,4 +36,10 @@ canvas {
 
 input[type="range"] {
   width: 95%;
+}
+
+#copy-url {
+  z-index: -100;
+  position: fixed;
+  top: -10em;
 }

@@ -12,6 +12,10 @@
     <canvas id="cells" width="2048" height="2048"></canvas>
 
     <div class="controls">
+      <h3>
+        Parameters
+      </h3>
+
       <div>
         Random Turn Rate
         <span id="randomness-display" class="range-display"></span>
@@ -25,16 +29,16 @@
         <input type="range" id="turnAngle" value="45" max="360">
       </div>
       <div>
-        Sensor Distance
-        <span class="range-display"></span>
-        <br>
-        <input type="range" id="sensorDistance" min="10" max="250">
-      </div>
-      <div>
         Sensor Angle
         <span class="range-display"></span>
         <br>
         <input type="range" id="sensorAngle" value="45" min="0" max="180">
+      </div>
+      <div>
+        Sensor Distance
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="sensorDistance" min="10" max="250">
       </div>
       <div>
         Speed
@@ -53,10 +57,19 @@
       </label>
 
       <div style="margin-top: 2em;">
+        <button id="randomize">
+          Randomize Parameters
+        </button>
+
         <button id="screenshot">
           Capture Screenshot
         </button>
         <a id="download"></a>
+
+        <button id="copy-parameters">
+          Copy URL With Parameters
+        </button>
+        <input id="copy-url">
       </div>
     </div>
   </div>
