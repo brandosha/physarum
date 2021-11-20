@@ -87,7 +87,7 @@ function uiSetup() {
         const val = obj[name]
         let valStr = val
         if (val % 1 !== 0) {
-          const leadingZeroes = Math.ceil(-Math.min(Math.log10(Math.abs(val)), 0))
+          const leadingZeroes = Math.ceil(-Math.min(Math.log10(Math.abs(val % 1)), 0))
           valStr = val.toFixed(leadingZeroes + 1)
         }
 
