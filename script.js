@@ -5,26 +5,24 @@ const cells = new GPU2D(document.getElementById("cells"), {
 
 const particleCount = 1000000
 
-function uiSetup() {
-  let ui = {
-    trail: {
-      followMouse: false
-    },
-    particles: {
-      randomness: 1,
-      sensorDistance: 55,
-      moveSpeed: 0.001,
-      turnSpeed: 0.125
-    },
-    diffuse: {
-      decayRate: 0.1
-    }
+const ui = {
+  trail: {
+    followMouse: false
+  },
+  particles: {
+    randomness: 1,
+    sensorDistance: 55,
+    moveSpeed: 0.001
+  },
+  diffuse: {
+    decayRate: 0.1
+  },
+  angles: {
+    turnAngle: 45,
+    sensorAngle: 45
   }
-  
-  ui.trail = glProxy(ui.trail, trail)
-  ui.particles = glProxy(ui.particles, particles)
-  ui.diffuse = glProxy(ui.diffuse, diffuse)
-
+}
+function uiSetup() {
   function glProxy(obj, prog) {
     const proxy = new Proxy(obj, {
       set(target, key, value) {
@@ -47,6 +45,38 @@ function uiSetup() {
     return proxy
   }
 
+  ui.trail = glProxy(ui.trail, trail)
+  ui.particles = glProxy(ui.particles, particles)
+  ui.diffuse = glProxy(ui.diffuse, diffuse)
+  ui.angles = new Proxy(ui.angles, {
+    set(target, key, value) {
+      const { gl } = cells
+
+      target[key] = value
+
+      if (key === "turnAngle") {
+        gl.useProgram(particles.program)
+        gl.uniform1f(particles.uniforms.turnSpeed, value / 360)
+      } else if (key === "sensorAngle") {
+        gl.useProgram(particles.program)
+
+        const sin = Math.sin
+        const cos = Math.cos
+        const radians = value / 180 * Math.PI
+        gl.uniformMatrix2fv(particles.uniforms.rotation, false, [
+          cos(radians), -sin(radians),
+          sin(radians), cos(radians)
+        ])
+        gl.uniformMatrix2fv(particles.uniforms.invRotation, false, [
+          cos(-radians), -sin(-radians),
+          sin(-radians), cos(-radians)
+        ])
+      }
+    }
+  })
+  Object.keys(ui.angles).forEach(key => ui.angles[key] = ui.angles[key])
+  
+
   cells.canvas.addEventListener("mousemove", event => {
     if (!ui.trail.followMouse) { return }
 
@@ -67,7 +97,6 @@ function uiSetup() {
   uiSlider("randomness", ui.particles)
   uiSlider("sensorDistance", ui.particles)
   uiSlider("moveSpeed", ui.particles)
-  // uiSlider("turnSpeed", ui.particles)
   uiSlider("decayRate", ui.diffuse)
 
   function uiSlider(name, obj, transform) {
@@ -98,41 +127,21 @@ function uiSetup() {
     updateDisplay()
   }
 
-  const angles = new Proxy({
-    turnAngle: 45,
-    sensorAngle: 45
-  }, {
-    set(target, key, value) {
-      target[key] = value
+  
 
-      if (key === "turnAngle") {
-        ui.particles.turnSpeed = value / 360
-      } else if (key === "sensorAngle") {
-        const { gl } = cells
-        gl.useProgram(particles.program)
+  uiSlider("sensorAngle", ui.angles)
+  uiSlider("turnAngle", ui.angles)
 
-        const sin = Math.sin
-        const cos = Math.cos
-        const radians = value / 180 * Math.PI
-        gl.uniformMatrix2fv(particles.uniforms.rotation, false, [
-          cos(radians), -sin(radians),
-          sin(radians), cos(radians)
-        ])
-        gl.uniformMatrix2fv(particles.uniforms.invRotation, false, [
-          cos(-radians), -sin(-radians),
-          sin(-radians), cos(-radians)
-        ])
-      }
-    }
+  const downloadEl = document.getElementById("download")
+  document.getElementById("screenshot").addEventListener("click", event => {
+    cells.canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob)
+      downloadEl.href = url
+      downloadEl.download = "physarum.jpg"
+      downloadEl.click()
+    }, "image/jpeg")
   })
-  Object.keys(angles).forEach(key => angles[key] = angles[key])
-
-  uiSlider("sensorAngle", angles)
-  uiSlider("turnAngle", angles)
-  // window.ui = ui
 }
-
-
 
 async function setup() {
   // await Promise.all([

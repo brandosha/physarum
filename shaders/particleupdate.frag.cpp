@@ -100,7 +100,7 @@ float sampleTrails(vec2 coord) {
     return 0.0;
   }
 
-  return texture2D(trails, coord).x;
+  return texture2D(trails, coord).b;
 }
 
 float turnDirection(vec2 p, vec2 v) {
