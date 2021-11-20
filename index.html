@@ -1,0 +1,60 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physarum</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <canvas id="cells" width="2048" height="2048"></canvas>
+
+    <div class="controls">
+      <div>
+        Random Turn Rate
+        <span id="randomness-display" class="range-display"></span>
+        <br>
+        <input type="range" id="randomness" value="1" max="3" step="0.001">
+      </div>
+      <div>
+        Turn Angle
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="turnAngle" value="45" max="360">
+      </div>
+      <div>
+        Sensor Distance
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="sensorDistance" min="10" max="250">
+      </div>
+      <div>
+        Sensor Angle
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="sensorAngle" value="45" min="0" max="180">
+      </div>
+      <div>
+        Speed
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="moveSpeed" value="0.001" min="-0.003" max="0.003" step="0.00001">
+      </div>
+      <div>
+        Trail Decay Rate
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="decayRate" value="0.1" min="0" max="1" step="0.01">
+      </div>
+      <label>
+        <input type="checkbox" id="followMouse"> Follow Mouse
+      </label>
+    </div>
+  </div>
+
+  <script src="/GPU2D.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
