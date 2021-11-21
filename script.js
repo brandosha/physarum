@@ -209,8 +209,6 @@ document.getElementById("copy-parameters").addEventListener("click", event => {
   const paramString = encodeURIComponent(JSON.stringify(exportParameters()))
 
   el.value = url + "#" + paramString
-  console.log(el.value)
-  
   el.select()
   document.execCommand("copy")
 })
