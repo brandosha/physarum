@@ -477,10 +477,79 @@ function diffuseTrails() {
   gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, width, height, 0)
 }
 
+const gifCtx = (function(){
+  const canvas = document.createElement("canvas")
+  canvas.width = 512
+  canvas.height = 512
+  
+  return canvas.getContext("2d")
+})()
+let gif, gifPromise
+let remainingGifFrames = -1
+function createGif(frames) {
+  gif = new GIF({
+    width: 512,
+    height: 512,
+    quality: 10,
+    workerScript: "gifjs/gif.worker.js",
+    background: "#000"
+  })
+  remainingGifFrames = frames
+  // gifImages = []
+
+  gifButton.disabled = true
+  gifButton.innerText = "Recording..."
+}
+const gifButton = document.getElementById("record-gif")
+gifButton.addEventListener("click", () => createGif(60))
+
 function drawLoop() {
   updateParticles()
   drawTrail()
   diffuseTrails()
+
+  if (remainingGifFrames > 0) {
+    remainingGifFrames -= 1
+
+    const promise = new Promise(resolve => {
+      cells.canvas.toBlob(blob => {
+        const img = new Image(512, 512)
+        img.src = URL.createObjectURL(blob)
+
+        img.onload = () => {
+          gifCtx.drawImage(img, 0, 0, 512, 512)
+          gif.addFrame(gifCtx, { copy: true, delay: 50 })
+          resolve()
+        }
+      }, "image/jpeg")
+    })
+
+    if (gifPromise) {
+      gifPromise = gifPromise.then(() => promise)
+    } else {
+      gifPromise = promise
+    }
+  } else if (remainingGifFrames === 0) {
+    gif.on("finished", blob => {
+      console.log(blob)
+
+      const url = URL.createObjectURL(blob)
+      const downloadEl = document.getElementById("download")
+      downloadEl.href = url
+      downloadEl.download = "physarum.gif"
+      downloadEl.click()
+
+      gifButton.disabled = false
+      gifButton.innerText = "Record GIF"
+    })
+
+    gifPromise.then(() => {
+      gifButton.innerText = "Processing..."
+      gif.render()
+    })
+
+    remainingGifFrames = -1
+  }
 
   requestAnimationFrame(drawLoop)
 }

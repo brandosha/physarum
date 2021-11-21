@@ -63,7 +63,24 @@ void main() {
   setUniformValue(name, setValue) {
     const { gl, program } = this
 
-    const location = gl.getUniformLocation(program, name)
+    if (!this.uniforms) {
+      /** @type { Map<WebGLProgram, Map<string, WebGLUniformLocation>> } */
+      this.uniforms = new Map()
+    }
+    let programUniforms = this.uniforms.get(program)
+    if (!programUniforms) {
+      programUniforms = new Map()
+      this.uniforms.set(program, programUniforms)
+    }
+
+    let location
+    if (!programUniforms.has(name)) {
+      location = gl.getUniformLocation(program, name)
+      programUniforms.set(name, location)
+    } else {
+      location = programUniforms.get(name)
+    }
+    
     setValue(gl, location)
     return location
   }
