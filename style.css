@@ -48,3 +48,33 @@ input[type="range"] {
   position: fixed;
   top: -10em;
 }
+
+button {
+  background-color: #444;
+  color: white;
+  padding: 0.5em 1em;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  border: none;
+  border-radius: 0.5em;
+}
+
+.button-group {
+  margin: 1em 0 1.5em;
+}
+
+button:hover {
+  background-color: #555;
+}
+
+button:active {
+  background-color: #666;
+}
+
+button:disabled {
+  background-color: #252525;
+  color: #ccc;
+  cursor: default;
+}

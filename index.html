@@ -56,11 +56,46 @@
         <input type="checkbox" id="followMouse"> Follow Mouse
       </label>
 
-      <div style="margin-top: 2em;">
+      <div class="button-group">
         <button id="randomize">
           Randomize Parameters
         </button>
 
+        <button id="copy-parameters">
+          Copy URL With Parameters
+        </button>
+        <input id="copy-url" readonly>
+      </div>
+
+      <h3>
+        Particles
+      </h3>
+
+      <div>
+        Particle Count
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="particleCount" value="1000000" min="50000" max="2000000" step="50000">
+      </div>
+
+      <div class="button-group">
+        <button id="restart">
+          Restart With New Particles
+        </button>
+      </div>
+
+      <h3>
+        Recording
+      </h3>
+
+      <div>
+        GIF Length
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="gifLength" value="3" min="1" max="10">
+      </div>
+
+      <div class="button-group">
         <button id="screenshot">
           Capture Screenshot
         </button>
@@ -69,11 +104,6 @@
         <button id="record-gif">
           Record GIF
         </button>
-
-        <button id="copy-parameters">
-          Copy URL With Parameters
-        </button>
-        <input id="copy-url" readonly>
       </div>
     </div>
   </div>

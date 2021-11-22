@@ -3,7 +3,7 @@ const cells = new GPU2D(document.getElementById("cells"), {
   preserveDrawingBuffer: true
 })
 
-const particleCount = 1000000
+let particleCount = 1000000
 
 const ui = {
   trail: {
@@ -22,6 +22,10 @@ const ui = {
     sensorAngle: 45
   },
 
+  other: {
+    gifLength: 3,
+    particleCount
+  },
   /** @type { Record<string, UISlider> } */
   sliders: null
 }
@@ -109,6 +113,13 @@ function uiSetup() {
     turnAngle: new UISlider("turnAngle", ui.angles)
   }
 
+  new UISlider("gifLength", ui.other)
+  new UISlider("particleCount", ui.other)
+  document.getElementById("restart").addEventListener("click", () => {
+    particleCount = ui.other.particleCount
+    setup()
+  })
+
   const downloadEl = document.getElementById("download")
   document.getElementById("screenshot").addEventListener("click", event => {
     cells.canvas.toBlob(blob => {
@@ -129,6 +140,19 @@ function uiSetup() {
       importParameters(parameters)
     } catch (err) {
       console.error(err)
+
+      const params = {}
+      hash.slice(1).split("&").forEach(param => {
+        const [key, value] = param.split("=")
+        
+        try {
+          params[key] = JSON.parse(value)
+        } catch (err) {
+          params[key] = value
+        }
+      })
+
+      importParameters(params)
     }
   }
 }
@@ -159,10 +183,10 @@ class UISlider {
 
     if (displayEl) {
       const val = obj[name]
-      let valStr = val
+      let valStr = val.toLocaleString()
       if (val % 1 !== 0) {
         const leadingZeroes = Math.ceil(-Math.min(Math.log10(Math.abs(val % 1)), 0))
-        valStr = val.toFixed(leadingZeroes + 1)
+        valStr = val.toLocaleString(undefined, { minimumFractionDigits: leadingZeroes, maximumFractionDigits: leadingZeroes })
       }
 
       displayEl.innerHTML = `(${valStr})`
@@ -192,7 +216,7 @@ function exportParameters() {
   const parameters = {}
 
   Object.keys(ui).forEach(key => {
-    if (key == "sliders") { return }
+    if (key == "sliders" || key == "other") { return }
 
     const params = ui[key]
     Object.keys(params).forEach(key => {
@@ -206,9 +230,14 @@ document.getElementById("copy-parameters").addEventListener("click", event => {
   const el = document.getElementById("copy-url")
 
   const url = location.protocol + "//" + location.host + location.pathname
-  const paramString = encodeURIComponent(JSON.stringify(exportParameters()))
+  
+  const params = exportParameters()
+  const paramValues = []
+  Object.keys(params).forEach(key => {
+    paramValues.push(`${key}=${params[key]}`)
+  })
 
-  el.value = url + "#" + paramString
+  el.value = url + "#" + paramValues.join("&")
   el.select()
   document.execCommand("copy")
 })
@@ -240,6 +269,7 @@ function importParameters(parameters) {
   })
 }
 
+let drawing = false
 async function setup() {
   // await Promise.all([
   //   createParticleUpdateProgram(),
@@ -252,7 +282,10 @@ async function setup() {
 
   uiSetup()
 
-  drawLoop()
+  if (!drawing) {
+    drawing = true
+    drawLoop()
+  }
 }
 window.addEventListener("load", setup)
 // setup()
@@ -486,7 +519,7 @@ const gifCtx = (function(){
 })()
 let gif, gifPromise
 let remainingGifFrames = -1
-function createGif(frames) {
+function recordGif(frames) {
   gif = new GIF({
     width: 512,
     height: 512,
@@ -495,13 +528,12 @@ function createGif(frames) {
     background: "#000"
   })
   remainingGifFrames = frames
-  // gifImages = []
 
   gifButton.disabled = true
   gifButton.innerText = "Recording..."
 }
 const gifButton = document.getElementById("record-gif")
-gifButton.addEventListener("click", () => createGif(60))
+gifButton.addEventListener("click", () => recordGif(ui.other.gifLength * 20))
 
 function drawLoop() {
   updateParticles()
