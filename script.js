@@ -3,7 +3,7 @@ const cells = new GPU2D(document.getElementById("cells"), {
   preserveDrawingBuffer: true
 })
 
-let particleCount = 1000000
+let particleCount = JSON.parse(localStorage.getItem("particleCount")) || 200000
 
 const ui = {
   trail: {
@@ -118,6 +118,8 @@ function uiSetup() {
   document.getElementById("restart").addEventListener("click", () => {
     particleCount = ui.other.particleCount
     setup()
+
+    localStorage.setItem("particleCount", particleCount)
   })
 
   const downloadEl = document.getElementById("download")
