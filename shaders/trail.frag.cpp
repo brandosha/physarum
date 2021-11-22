@@ -6,14 +6,27 @@ uniform bool followMouse;
 
 varying float direction;
 
-void main() {
 
-  if (direction < 0.5) {
-    gl_FragColor = vec4(0.0, 1.0 - 2.0 * direction, 1.0, 1.0);
+uniform float color;
+uniform float colorOffset;
+
+void main() {
+  vec2 colorab;
+
+  float dir = fract(direction + colorOffset);
+  if (dir < 0.5) {
+    colorab = vec2(0.0, 1.0 - 2.0 * dir);
   } else {
-    gl_FragColor = vec4(2.0 * direction - 1.0, 0.0, 1.0, 1.0);
+    colorab = vec2(2.0 * dir - 1.0, 0.0);
   }
-  
+
+  if (color == 0.0) {
+    gl_FragColor = vec4(colorab, 1.0, 1.0);
+  } else if (color == 1.0) {
+    gl_FragColor = vec4(1.0, colorab, 1.0);
+  } else {
+    gl_FragColor = vec4(colorab[0], 1.0, colorab[1], 1.0);
+  }
 
   if (followMouse) {
     float x = gl_FragCoord.x / uViewSize.x;

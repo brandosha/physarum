@@ -14,5 +14,5 @@ vec4 pixel(float x, float y) {
   sum += texture2D(trails, p - vert);
   sum += texture2D(trails, p - horiz);
 
-  return vec4(sum.xyz / 5.0 * (1.0 - decayRate), 1.0);
+  return sum / 5.0 * (1.0 - decayRate);
 }

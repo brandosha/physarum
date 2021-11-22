@@ -7,7 +7,10 @@ let particleCount = JSON.parse(localStorage.getItem("particleCount")) || 200000
 
 const ui = {
   trail: {
-    followMouse: false
+    followMouse: false,
+
+    color: 0,
+    colorOffset: 0,
   },
   particles: {
     randomness: 1,
@@ -110,7 +113,9 @@ function uiSetup() {
     moveSpeed: new UISlider("moveSpeed", ui.particles),
     decayRate: new UISlider("decayRate", ui.diffuse),
     sensorAngle: new UISlider("sensorAngle", ui.angles),
-    turnAngle: new UISlider("turnAngle", ui.angles)
+    turnAngle: new UISlider("turnAngle", ui.angles),
+    color: new UISlider("color", ui.trail),
+    colorOffset: new UISlider("colorOffset", ui.trail)
   }
 
   new UISlider("gifLength", ui.other)
@@ -188,7 +193,7 @@ class UISlider {
       let valStr = val.toLocaleString()
       if (val % 1 !== 0) {
         const leadingZeroes = Math.ceil(-Math.min(Math.log10(Math.abs(val % 1)), 0))
-        valStr = val.toLocaleString(undefined, { minimumFractionDigits: leadingZeroes, maximumFractionDigits: leadingZeroes })
+        valStr = val.toLocaleString(undefined, { minimumFractionDigits: leadingZeroes, maximumFractionDigits: leadingZeroes + 2 })
       }
 
       displayEl.innerHTML = `(${valStr})`
@@ -204,11 +209,15 @@ function randomizeParameters() {
   ui.particles.sensorDistance = Math.floor(Math.random() * 200) + 10
   ui.angles.sensorAngle = Math.floor(Math.random() * 85) + 5
   ui.angles.turnAngle = Math.floor(Math.random() * 85) + 5
+  ui.trail.color = Math.floor(Math.random() * 3)
+  ui.trail.colorOffset = Math.random()
 
   if (ui.sliders) {
     ui.sliders.sensorDistance.update()
     ui.sliders.sensorAngle.update()
     ui.sliders.turnAngle.update()
+    ui.sliders.color.update()
+    ui.sliders.colorOffset.update()
   }
 }
 randomizeParameters()
@@ -422,6 +431,8 @@ async function createTrailUpdateProgram() {
   cells.setUniformValue("uViewSize", (gl, p) => gl.uniform2f(p, canvas.width, canvas.height))
   trail.uniforms.mousePos = gl.getUniformLocation(program, "mousePos")
   trail.uniforms.followMouse = gl.getUniformLocation(program, "followMouse")
+  trail.uniforms.color = gl.getUniformLocation(program, "color")
+  trail.uniforms.colorOffset = gl.getUniformLocation(program, "colorOffset")
 
   const framebuffer = gl.createFramebuffer()
   gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
