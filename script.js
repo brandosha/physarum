@@ -236,7 +236,7 @@ document.getElementById("copy-parameters").addEventListener("click", event => {
   const paramValues = []
   Object.keys(params).forEach(key => {
     if (key == "canvasSize") { return }
-    
+
     paramValues.push(`${key}=${params[key]}`)
   })
 
@@ -555,19 +555,14 @@ function diffuseTrails() {
   gl.copyTexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0, 0, width, height, 0)
 }
 
-const gifCtx = (function(){
-  const canvas = document.createElement("canvas")
-  canvas.width = 512
-  canvas.height = 512
-  
-  return canvas.getContext("2d")
-})()
 let gif, gifPromise
 let remainingGifFrames = -1
 function recordGif(frames) {
+  const { width, height } = cells.canvas
+
   gif = new GIF({
-    width: 512,
-    height: 512,
+    width: width,
+    height: height,
     quality: 10,
     workerScript: "gifjs/gif.worker.js",
     background: "#000"
@@ -594,8 +589,7 @@ function drawLoop() {
         img.src = URL.createObjectURL(blob)
 
         img.onload = () => {
-          gifCtx.drawImage(img, 0, 0, 512, 512)
-          gif.addFrame(gifCtx, { copy: true, delay: 50 })
+          gif.addFrame(img, { delay: 50 })
           resolve()
         }
       }, "image/jpeg")
