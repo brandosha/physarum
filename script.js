@@ -14,7 +14,7 @@ const ui = {
   },
   particles: {
     randomness: 1,
-    sensorDistance: 50,
+    sensorDistance: 0.02,
     moveSpeed: 0.001
   },
   diffuse: {
@@ -27,11 +27,13 @@ const ui = {
 
   other: {
     gifLength: 3,
-    particleCount
+    particleCount,
+    canvasSize: cells.canvas.width
   },
   /** @type { Record<string, UISlider> } */
   sliders: null
 }
+
 function uiSetup() {
   function glProxy(obj, prog) {
     const proxy = new Proxy(obj, {
@@ -46,6 +48,7 @@ function uiSetup() {
           gl.uniform1f(prog.uniforms[key], target[key])
         }
 
+        updateUrl()
         return true
       }
     })
@@ -85,6 +88,7 @@ function uiSetup() {
         ])
       }
 
+      updateUrl()
       return true
     }
   })
@@ -115,17 +119,26 @@ function uiSetup() {
     sensorAngle: new UISlider("sensorAngle", ui.angles),
     turnAngle: new UISlider("turnAngle", ui.angles),
     color: new UISlider("color", ui.trail),
-    colorOffset: new UISlider("colorOffset", ui.trail)
+    colorOffset: new UISlider("colorOffset", ui.trail),
+    gifLength: new UISlider("gifLength", ui.other),
+    particleCount: new UISlider("particleCount", ui.other),
+    canvasSize: new UISlider("canvasSize", ui.other)
   }
 
-  new UISlider("gifLength", ui.other)
-  new UISlider("particleCount", ui.other)
   document.getElementById("restart").addEventListener("click", () => {
+    cells.canvas.width = ui.other.canvasSize
+    cells.canvas.height = ui.other.canvasSize
     particleCount = ui.other.particleCount
-    setup()
+    resetTrailAndParticles()
 
+    updateUrl()
     localStorage.setItem("particleCount", particleCount)
   })
+  if (ui.other.canvasSize !== cells.canvas.width) {
+    cells.canvas.width = ui.other.canvasSize
+    cells.canvas.height = ui.other.canvasSize
+    resetTrailAndParticles()
+  }
 
   const downloadEl = document.getElementById("download")
   document.getElementById("screenshot").addEventListener("click", event => {
@@ -136,32 +149,6 @@ function uiSetup() {
       downloadEl.click()
     }, "image/jpeg")
   })
-
-  if (location.hash) {
-    const hash = location.hash
-    location.hash = ""
-
-    try {
-      const json = decodeURIComponent(hash.slice(1))
-      const parameters = JSON.parse(json)
-      importParameters(parameters)
-    } catch (err) {
-      console.error(err)
-
-      const params = {}
-      hash.slice(1).split("&").forEach(param => {
-        const [key, value] = param.split("=")
-        
-        try {
-          params[key] = JSON.parse(value)
-        } catch (err) {
-          params[key] = value
-        }
-      })
-
-      importParameters(params)
-    }
-  }
 }
 
 class UISlider {
@@ -206,7 +193,7 @@ class UISlider {
 }
 
 function randomizeParameters() {
-  ui.particles.sensorDistance = Math.floor(Math.random() * 200) + 10
+  ui.particles.sensorDistance = Math.floor(Math.random() * 100) / 1000 + 0.001
   ui.angles.sensorAngle = Math.floor(Math.random() * 85) + 5
   ui.angles.turnAngle = Math.floor(Math.random() * 85) + 5
   ui.trail.color = Math.floor(Math.random() * 3)
@@ -227,13 +214,16 @@ function exportParameters() {
   const parameters = {}
 
   Object.keys(ui).forEach(key => {
-    if (key == "sliders" || key == "other") { return }
+    if (key == "sliders") { return }
 
     const params = ui[key]
     Object.keys(params).forEach(key => {
       parameters[key] = params[key]
     })
   })
+
+  delete parameters.particleCount
+  delete parameters.gifLength
 
   return parameters
 }
@@ -252,6 +242,15 @@ document.getElementById("copy-parameters").addEventListener("click", event => {
   el.select()
   document.execCommand("copy")
 })
+function updateUrl() {
+  const params = exportParameters()
+  const paramValues = []
+  Object.keys(params).forEach(key => {
+    paramValues.push(`${key}=${params[key]}`)
+  })
+
+  location.hash = paramValues.join("&")
+}
 
 let paramObjects
 function importParameters(parameters) {
@@ -275,12 +274,39 @@ function importParameters(parameters) {
     }
   })
 
+  if (!ui.sliders) return
   Object.keys(ui.sliders).forEach(key => {
     ui.sliders[key].update()
   })
 }
+if (location.hash) {
+  const hash = location.hash
 
-let drawing = false
+  try {
+    const json = decodeURIComponent(hash.slice(1))
+    const parameters = JSON.parse(json)
+    importParameters(parameters)
+  } catch (err) {
+    const params = {}
+    hash.slice(1).split("&").forEach(param => {
+      const [key, value] = param.split("=")
+      
+      try {
+        params[key] = JSON.parse(value)
+      } catch (err) {
+        params[key] = value
+      }
+    })
+
+    if (params.sensorDistance > 1) {
+      params.sensorDistance /= 2048
+    }
+
+    importParameters(params)
+  }
+}
+
+let initialSetup = true
 async function setup() {
   // await Promise.all([
   //   createParticleUpdateProgram(),
@@ -293,17 +319,18 @@ async function setup() {
 
   uiSetup()
 
-  if (!drawing) {
-    drawing = true
+  if (initialSetup) {
+    initialSetup = false
+
     drawLoop()
   }
 }
 window.addEventListener("load", setup)
-// setup()
 
 const particles = {
   program: null,
   framebuffer: null,
+  texture: null,
   texSize: {
     width: 0,
     height: 0
@@ -376,6 +403,7 @@ async function createParticleUpdateProgram() {
 
   particles.program = program
   particles.framebuffer = framebuffer
+  particles.texture = particleTex
 }
 
 function updateParticles() {
@@ -398,6 +426,7 @@ function updateParticles() {
 const trail = {
   program: null,
   framebuffer: null,
+  texture: null,
   vertexBuffer: null,
   uniforms: {
     mousePos: null,
@@ -461,6 +490,7 @@ async function createTrailUpdateProgram() {
 
   trail.program = program
   trail.framebuffer = framebuffer
+  trail.texture = trailTex
   trail.vertexBuffer = vertexBuffer
 }
 
@@ -597,4 +627,52 @@ function drawLoop() {
   }
 
   requestAnimationFrame(drawLoop)
+}
+
+function resetTrailAndParticles() {
+  const { gl, canvas } = cells
+
+  cells.useProgram(trail.program)
+  cells.setUniformValue("uViewSize", (gl, p) => gl.uniform2f(p, canvas.width, canvas.height))
+
+  cells.useProgram(particles.program)
+  cells.setUniformValue("particleCount", (gl, p) => gl.uniform1f(p, particleCount))
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, trail.framebuffer)
+  gl.viewport(0, 0, canvas.width, canvas.height)
+  gl.clearColor(0, 0, 0, 0)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+
+  const vertexArray = new Float32Array(particleCount)
+  for (let i = 0; i < particleCount; i++) {
+    vertexArray[i] = i
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, trail.vertexBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, vertexArray, gl.STATIC_DRAW)
+
+  const pixels = particleCount * 2
+  const width = Math.min(pixels, canvas.width)
+  const height = Math.ceil(pixels / canvas.width)
+  particles.texSize = { width, height }
+
+  const initial = new Uint8Array(4 * width * height)
+  for (let i = 0; i < particleCount; i++) {
+    const offset = i * 8
+
+    const x = Math.floor(Math.random() * 64) + 96
+    const y = Math.floor(Math.random() * 64) + 96
+
+    let direction = Math.random()
+
+    initial[offset] = x
+    initial[offset + 1] = Math.floor(Math.random() * 256)
+    initial[offset + 2] = y
+    initial[offset + 3] = Math.floor(Math.random() * 256)
+    initial[offset + 4] = direction * 256
+    initial[offset + 5] = direction / 256 % 256
+  }
+
+  gl.activeTexture(gl.TEXTURE1)
+  gl.bindTexture(gl.TEXTURE_2D, particles.texture)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, initial)
 }

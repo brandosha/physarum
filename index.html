@@ -13,6 +13,28 @@
 
     <div class="controls">
       <h3>
+        Recording
+      </h3>
+  
+      <div>
+        GIF Length
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="gifLength" value="3" min="1" max="10">
+      </div>
+  
+      <div class="button-group">
+        <button id="screenshot">
+          Capture Screenshot
+        </button>
+        <a id="download"></a>
+  
+        <button id="record-gif">
+          Record GIF
+        </button>
+      </div>
+
+      <h3>
         Behavior
       </h3>
 
@@ -20,37 +42,37 @@
         Random Turn Rate
         <span id="randomness-display" class="range-display"></span>
         <br>
-        <input type="range" id="randomness" value="1" max="3" step="0.001">
+        <input type="range" id="randomness" max="3" step="0.01">
       </div>
       <div>
         Turn Angle
         <span class="range-display"></span>
         <br>
-        <input type="range" id="turnAngle" value="45" max="360">
+        <input type="range" id="turnAngle" max="360">
       </div>
       <div>
         Sensor Angle
         <span class="range-display"></span>
         <br>
-        <input type="range" id="sensorAngle" value="45" min="0" max="180">
+        <input type="range" id="sensorAngle" min="0" max="180">
       </div>
       <div>
         Sensor Distance
         <span class="range-display"></span>
         <br>
-        <input type="range" id="sensorDistance" min="10" max="250">
+        <input type="range" id="sensorDistance" min="0.001" max="0.1" step="0.001">
       </div>
       <div>
         Speed
         <span class="range-display"></span>
         <br>
-        <input type="range" id="moveSpeed" value="0.001" min="-0.003" max="0.003" step="0.00001">
+        <input type="range" id="moveSpeed" min="-0.003" max="0.003" step="0.00001">
       </div>
       <div>
         Trail Decay Rate
         <span class="range-display"></span>
         <br>
-        <input type="range" id="decayRate" value="0.1" min="0" max="1" step="0.001">
+        <input type="range" id="decayRate" min="0" max="1" step="0.001">
       </div>
       <label>
         <input type="checkbox" id="followMouse"> Follow Mouse
@@ -73,7 +95,6 @@
 
       <div>
         Primary Color
-        <span class="range-display"></span>
         <br>
         <input type="range" id="color" value="0" max="2">
       </div>
@@ -84,7 +105,18 @@
         <input type="range" id="colorOffset" value="0" max="1" step="0.001">
       </div>
 
-      <div style="margin-top: 1em;">
+      <h3 style="margin-top: 1.5em;">
+        Initial Parameters
+      </h3>
+
+      <div>
+        Pixel Width
+        <span class="range-display"></span>
+        <br>
+        <input type="range" id="canvasSize" value="2048" min="100" max="5000">
+      </div>
+
+      <div>
         Particle Count
         <span class="range-display"></span>
         <br>
@@ -93,29 +125,7 @@
 
       <div class="button-group">
         <button id="restart">
-          Restart With New Particles
-        </button>
-      </div>
-
-      <h3>
-        Recording
-      </h3>
-
-      <div>
-        GIF Length
-        <span class="range-display"></span>
-        <br>
-        <input type="range" id="gifLength" value="3" min="1" max="10">
-      </div>
-
-      <div class="button-group">
-        <button id="screenshot">
-          Capture Screenshot
-        </button>
-        <a id="download"></a>
-
-        <button id="record-gif">
-          Record GIF
+          Restart
         </button>
       </div>
     </div>

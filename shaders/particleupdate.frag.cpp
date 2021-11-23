@@ -104,10 +104,10 @@ float sampleTrails(vec2 coord) {
 }
 
 float turnDirection(vec2 p, vec2 v) {
-  float dx = 1.0 / uViewSize.x;
-  float dy = 1.0 / uViewSize.y;
+  // float dx = 1.0 / uViewSize.x;
+  // float dy = 1.0 / uViewSize.y;
 
-  vec2 sensor = vec2(v.x * dx, v.y * dy) * sensorDistance;
+  vec2 sensor = v * sensorDistance; // vec2(v.x * dx, v.y * dy) * sensorDistance;
 
   float s_n = sampleTrails(p + sensor * invRotation);
   float s_0 = sampleTrails(p + sensor);
