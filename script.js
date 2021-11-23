@@ -235,6 +235,8 @@ document.getElementById("copy-parameters").addEventListener("click", event => {
   const params = exportParameters()
   const paramValues = []
   Object.keys(params).forEach(key => {
+    if (key == "canvasSize") { return }
+    
     paramValues.push(`${key}=${params[key]}`)
   })
 
