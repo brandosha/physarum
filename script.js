@@ -284,12 +284,11 @@ function importParameters(parameters) {
 if (location.hash) {
   const hash = location.hash
 
+  let params = {}
   try {
     const json = decodeURIComponent(hash.slice(1))
-    const parameters = JSON.parse(json)
-    importParameters(parameters)
+    params = JSON.parse(json)
   } catch (err) {
-    const params = {}
     hash.slice(1).split("&").forEach(param => {
       const [key, value] = param.split("=")
       
@@ -299,13 +298,12 @@ if (location.hash) {
         params[key] = value
       }
     })
-
-    if (params.sensorDistance > 1) {
-      params.sensorDistance /= 2048
-    }
-
-    importParameters(params)
   }
+
+  if (params.sensorDistance > 1) {
+    params.sensorDistance /= 2048
+  }
+  importParameters(params)
 }
 
 let initialSetup = true
